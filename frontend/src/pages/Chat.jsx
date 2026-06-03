@@ -97,6 +97,9 @@ export default function Chat({ token, chatId, historyEnabled, onSaveSession, onN
     setInput('')
     setContext(null)
 
+    // Auto-create chatId on first message if not set
+    if (!chatId) onNewChat()
+
     const userMsg = { role: 'user', text: msg, id: crypto.randomUUID() }
     const assistantMsg = { role: 'assistant', text: '', streaming: true, id: crypto.randomUUID() }
 
@@ -174,8 +177,8 @@ export default function Chat({ token, chatId, historyEnabled, onSaveSession, onN
         const copy = [...prev]
         const last = copy[copy.length - 1]
         if (last?.streaming) copy[copy.length - 1] = { ...last, streaming: false }
-        // save to history
-        saveToHistory(copy, copy[0]?.text?.slice(0, 40))
+        const firstUserMsg = copy.find(m => m.role === 'user')?.text || 'New chat'
+        saveToHistory(copy, firstUserMsg.slice(0, 40))
         return copy
       })
     }

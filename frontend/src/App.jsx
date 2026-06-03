@@ -41,6 +41,7 @@ function AppShell({ token, onLogout }) {
     if (idx >= 0) stored[idx] = sessionData
     else stored.unshift(sessionData)
     localStorage.setItem('lm_sessions', JSON.stringify(stored.slice(0, 100)))
+    window.dispatchEvent(new Event('lm_sessions_updated'))
   }, [historyEnabled])
 
   return (

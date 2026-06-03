@@ -55,11 +55,14 @@ export default function Sidebar({
 }) {
   const [sessions, setSessions] = useState([])
 
+  // Sync sessions from localStorage whenever storage changes or deps change
   useEffect(() => {
     if (!historyEnabled || !token) { setSessions([]); return }
-    const stored = JSON.parse(localStorage.getItem('lm_sessions') || '[]')
-    setSessions(stored)
-  }, [historyEnabled, token, activeChatId])
+    const sync = () => setSessions(JSON.parse(localStorage.getItem('lm_sessions') || '[]'))
+    sync()
+    window.addEventListener('lm_sessions_updated', sync)
+    return () => window.removeEventListener('lm_sessions_updated', sync)
+  }, [historyEnabled, token])
 
   function deleteSession(id, e) {
     e.stopPropagation()
