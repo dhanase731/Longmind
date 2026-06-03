@@ -1,0 +1,297 @@
+openapi: 3.0.0
+info:
+  title: LongMind Memory API
+  version: 1.0.0
+  description: Universal AI memory orchestration platform
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+
+security:
+  - bearerAuth: []
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      security: []
+      responses:
+        "200":
+          description: Service health status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  services:
+                    type: object
+                    properties:
+                      postgres:
+                        type: boolean
+                      redis:
+                        type: boolean
+
+  /auth/register:
+    post:
+      summary: Register a new user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 8
+      responses:
+        "200":
+          description: User created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      email:
+                        type: string
+        "400":
+          description: Invalid input
+
+  /auth/login:
+    post:
+      summary: Login and receive JWT
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "200":
+          description: JWT token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        "401":
+          description: Invalid credentials
+
+  /chat:
+    post:
+      summary: Send a message through the memory orchestrator
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message:
+                  type: string
+                sessionId:
+                  type: string
+                mode:
+                  type: string
+                  enum: [OFF, SESSION, EPISODIC, SEMANTIC, FULL, INCOGNITO]
+                  default: FULL
+      responses:
+        "200":
+          description: AI response with memory context
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reply:
+                    type: string
+                  context:
+                    type: object
+                    properties:
+                      mode:
+                        type: string
+                      memoriesUsed:
+                        type: integer
+                      sources:
+                        type: array
+
+  /chat/stream:
+    post:
+      summary: Stream a chat response via Server-Sent Events
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message:
+                  type: string
+                sessionId:
+                  type: string
+                mode:
+                  type: string
+      responses:
+        "200":
+          description: SSE stream (events: meta, chunk, context)
+          content:
+            text/event-stream:
+              schema:
+                type: string
+
+  /chat/stop:
+    post:
+      summary: Stop an active streaming generation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [generationId]
+              properties:
+                generationId:
+                  type: string
+      responses:
+        "200":
+          description: Generation stopped
+
+  /memories:
+    get:
+      summary: List memories for the authenticated user
+      parameters:
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: [stm, ltm, episodic, semantic]
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 50
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: List of memories
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  memories:
+                    type: array
+
+  /memories/all:
+    delete:
+      summary: Delete all memories for the authenticated user
+      responses:
+        "200":
+          description: All memories deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  deleted:
+                    type: integer
+
+  /memories/{id}:
+    delete:
+      summary: Delete a specific memory
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+
+  /memories/session/{sessionId}:
+    delete:
+      summary: Delete all memories for a session
+      parameters:
+        - in: path
+          name: sessionId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+
+  /governance/mode:
+    get:
+      summary: Get current memory governance mode
+      responses:
+        "200":
+          description: Current mode
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mode:
+                    type: string
+                    example: FULL
+    post:
+      summary: Set memory governance mode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mode]
+              properties:
+                mode:
+                  type: string
+                  enum: [OFF, SESSION, EPISODIC, SEMANTIC, FULL, INCOGNITO]
+                sessionId:
+                  type: string
+                  description: If provided, sets mode for this session only
+      responses:
+        "200":
+          description: Mode updated
