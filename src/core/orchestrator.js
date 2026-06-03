@@ -34,9 +34,17 @@ async function processChat({ userId, sessionId, message, mode }) {
   // Compress context
   const context = compressor.pack(retrieved, 3000);
 
+  // Pull out identity facts for explicit injection
+  const identityFacts = retrieved
+    .filter(r => r.memory?.content)
+    .map(r => r.memory.content)
+    .join('\n');
+
   // Assemble prompt
-  const systemPrompt = context
-    ? `You are a helpful assistant with access to the user's memory context below. Use it to personalize your response. If the context is relevant, reference it naturally. Do not mention "memory" or "context" explicitly unless asked.\n\n[MEMORY CONTEXT]\n${context}`
+  const systemPrompt = identityFacts
+    ? `You are a helpful assistant. You know the following facts about the user:\n${identityFacts}\n\nUse these facts naturally in your response. Do not say you don't know something that is listed above.`
+    : context
+    ? `You are a helpful assistant with access to the user's memory context below. Use it to personalize your response.\n\n[MEMORY CONTEXT]\n${context}`
     : `You are a helpful assistant.`;
   const prompt = `${systemPrompt}\n\n[USER]\n${message}`;
 
@@ -85,8 +93,15 @@ module.exports.processChatStream = async function ({ userId, sessionId, message,
   }
 
   const context = compressor.pack(retrieved, 3000);
-  const systemPrompt = context
-    ? `You are a helpful assistant with access to the user's memory context below. Use it to personalize your response. If the context is relevant, reference it naturally. Do not mention "memory" or "context" explicitly unless asked.\n\n[MEMORY CONTEXT]\n${context}`
+  const identityFacts = retrieved
+    .filter(r => r.memory?.content)
+    .map(r => r.memory.content)
+    .join('\n');
+
+  const systemPrompt = identityFacts
+    ? `You are a helpful assistant. You know the following facts about the user:\n${identityFacts}\n\nUse these facts naturally in your response. Do not say you don't know something that is listed above.`
+    : context
+    ? `You are a helpful assistant with access to the user's memory context below. Use it to personalize your response.\n\n[MEMORY CONTEXT]\n${context}`
     : `You are a helpful assistant.`;
   const prompt = `${systemPrompt}\n\n[USER]\n${message}`;
 
