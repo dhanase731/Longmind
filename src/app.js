@@ -2,7 +2,8 @@ const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
-const yaml = require('yamljs');
+const yaml = require('js-yaml');
+const fs = require('fs');
 const swaggerUi = require('swagger-ui-express');
 const path = require('path');
 
@@ -50,7 +51,7 @@ app.get('/health', async (req, res) => {
   res.json({ status: 'ok', services: { mongodb: mongoOk, redis: redisOk } });
 });
 
-const swaggerDocument = yaml.load(path.join(__dirname, 'swagger', 'swagger.yaml'));
+const swaggerDocument = yaml.load(fs.readFileSync(path.join(__dirname, 'swagger', 'swagger.yaml'), 'utf8'));
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use(errorHandler);
