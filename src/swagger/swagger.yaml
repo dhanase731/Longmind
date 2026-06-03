@@ -39,7 +39,7 @@ paths:
                   services:
                     type: object
                     properties:
-                      postgres:
+                      mongodb:
                         type: boolean
                       redis:
                         type: boolean
@@ -61,7 +61,7 @@ paths:
                   format: email
                 password:
                   type: string
-                  minLength: 8
+                  minLength: 6
       responses:
         "200":
           description: User created
@@ -77,8 +77,8 @@ paths:
                         type: string
                       email:
                         type: string
-        "400":
-          description: Invalid input
+        "409":
+          description: Email already registered
 
   /auth/login:
     post:
@@ -167,7 +167,7 @@ paths:
                   type: string
       responses:
         "200":
-          description: SSE stream (events: meta, chunk, context)
+          description: SSE stream (events meta, chunk, context)
           content:
             text/event-stream:
               schema:
