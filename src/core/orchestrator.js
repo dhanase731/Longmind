@@ -6,6 +6,17 @@ const extractor = require('../memory/memory.extractor');
 const memoryMode = require('../governance/memoryMode.manager');
 const { User } = require('../storage/mongo.service');
 
+function _buildPrompt(message, retrieved) {
+  const facts = retrieved
+    .filter(r => r.memory?.content)
+    .map(r => r.memory.content);
+
+  if (facts.length) {
+    return `You are a helpful assistant. You know the following facts about the user — use them naturally and NEVER claim you don't know something listed here:\n${facts.map(f => `- ${f}`).join('\n')}\n\n[USER]\n${message}`;
+  }
+  return `You are a helpful assistant.\n\n[USER]\n${message}`;
+}
+
 async function _resolveMode(userId, mode) {
   if (mode) return memoryMode.normalize(mode);
   try {
@@ -19,7 +30,6 @@ async function _resolveMode(userId, mode) {
 async function processChat({ userId, sessionId, message, mode }) {
   const effectiveMode = await _resolveMode(userId, mode);
 
-  // Governance: enforce BEFORE retrieval
   const canRetrieve = memoryMode.allowRetrieval(effectiveMode);
   let retrieved = [];
   if (canRetrieve) {
@@ -27,28 +37,10 @@ async function processChat({ userId, sessionId, message, mode }) {
       retrieved = await retrieval.recall(userId, message, { mode: effectiveMode });
     } catch (e) {
       console.warn('retrieval failed, continuing without context', e.message);
-      retrieved = [];
     }
   }
 
-  // Compress context
-  const context = compressor.pack(retrieved, 3000);
-
-  // Pull out identity facts for explicit injection
-  const identityFacts = retrieved
-    .filter(r => r.memory?.content)
-    .map(r => r.memory.content)
-    .join('\n');
-
-  // Assemble prompt
-  const systemPrompt = identityFacts
-    ? `You are a helpful assistant. You know the following facts about the user:\n${identityFacts}\n\nUse these facts naturally in your response. Do not say you don't know something that is listed above.`
-    : context
-    ? `You are a helpful assistant with access to the user's memory context below. Use it to personalize your response.\n\n[MEMORY CONTEXT]\n${context}`
-    : `You are a helpful assistant.`;
-  const prompt = `${systemPrompt}\n\n[USER]\n${message}`;
-
-  // Invoke Gemini
+  const prompt = _buildPrompt(message, retrieved);
   const response = await gemini.generate(prompt);
 
   // Memory extraction (rule-based)
@@ -92,18 +84,7 @@ module.exports.processChatStream = async function ({ userId, sessionId, message,
     }
   }
 
-  const context = compressor.pack(retrieved, 3000);
-  const identityFacts = retrieved
-    .filter(r => r.memory?.content)
-    .map(r => r.memory.content)
-    .join('\n');
-
-  const systemPrompt = identityFacts
-    ? `You are a helpful assistant. You know the following facts about the user:\n${identityFacts}\n\nUse these facts naturally in your response. Do not say you don't know something that is listed above.`
-    : context
-    ? `You are a helpful assistant with access to the user's memory context below. Use it to personalize your response.\n\n[MEMORY CONTEXT]\n${context}`
-    : `You are a helpful assistant.`;
-  const prompt = `${systemPrompt}\n\n[USER]\n${message}`;
+  const prompt = _buildPrompt(message, retrieved);
 
   let finalText = '';
   try {

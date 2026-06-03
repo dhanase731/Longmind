@@ -24,7 +24,9 @@ async function recall(userId, queryText, options = {}) {
       const hours = (Date.now() - new Date(r.created_at)) / 3600000;
       const recency = scoring.recencyScore(hours);
       const importance = r.importance || 0.5;
-      const final = scoring.finalScore(semantic, recency, importance);
+      // Boost identity/high-importance memories so they always surface
+      const importanceBoost = importance >= 0.8 ? 0.3 : 0;
+      const final = scoring.finalScore(semantic, recency, importance) + importanceBoost;
       return {
         memory: { id: r._id, content: r.content, memory_type: r.memory_type, created_at: r.created_at },
         scores: { semantic, recency, importance, final },
@@ -32,7 +34,10 @@ async function recall(userId, queryText, options = {}) {
       };
     });
 
-    return items.sort((a, b) => b.scores.final - a.scores.final).slice(0, 5);
+    return items
+      .filter(i => i.scores.final > 0.1)
+      .sort((a, b) => b.scores.final - a.scores.final)
+      .slice(0, 5);
   } catch (e) {
     console.warn('retrieval error, fallback to recent', e.message);
     try {
