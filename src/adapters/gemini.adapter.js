@@ -1,7 +1,7 @@
 const { GEMINI_API_KEY } = require('../config/env');
 
 const BASE = 'https://generativelanguage.googleapis.com/v1beta';
-const GEN_MODEL = 'models/gemini-1.5-flash';
+const GEN_MODEL = 'models/gemini-2.0-flash';
 const EMBED_MODEL = 'models/gemini-embedding-001';
 
 function deterministicEmbedding(text, dim = 768) {
