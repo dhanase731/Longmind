@@ -69,7 +69,9 @@ async function stream(prompt, onChunk, options = {}) {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.error?.message || `HTTP ${res.status}`);
+    const msg = err.error?.message || `HTTP ${res.status}`;
+    console.error('Gemini stream error:', msg);
+    throw new Error(msg);
   }
 
   const reader = res.body.getReader();

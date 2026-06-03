@@ -97,7 +97,7 @@ module.exports.processChatStream = async function ({ userId, sessionId, message,
       try { await onChunk(chunk); } catch (e) {}
     }, { signal: abortSignal });
   } catch (e) {
-    console.warn('streaming failed, falling back to generate', e.message);
+    console.error('streaming failed:', e.message);
     const r = await gemini.generate(prompt);
     finalText = r.text || '';
     await onChunk(finalText);
