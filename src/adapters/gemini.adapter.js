@@ -1,8 +1,16 @@
 const { GEMINI_API_KEY } = require('../config/env');
 
 const BASE = 'https://generativelanguage.googleapis.com/v1beta';
-const GEN_MODEL = 'models/gemini-2.5-flash-preview-05-20';
+const GEN_MODEL = 'models/gemini-2.5-flash';
 const EMBED_MODEL = 'models/text-embedding-004';
+
+// Log available models on startup
+if (GEMINI_API_KEY) {
+  fetch(`${BASE}/models?key=${GEMINI_API_KEY}`)
+    .then(r => r.json())
+    .then(d => console.log('Available Gemini models:', d.models?.map(m => m.name).join(', ')))
+    .catch(() => {});
+}
 
 function deterministicEmbedding(text, dim = 768) {
   const crypto = require('crypto');
