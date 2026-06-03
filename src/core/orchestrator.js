@@ -6,15 +6,31 @@ const extractor = require('../memory/memory.extractor');
 const memoryMode = require('../governance/memoryMode.manager');
 const { User } = require('../storage/mongo.service');
 
-function _buildPrompt(message, retrieved) {
+function _buildPrompt(message, retrieved, history = [], incognito = false) {
+  if (incognito) {
+    return `You are a helpful assistant. You have no memory of any previous conversations. Answer only based on the current message.\n\nUser: ${message}\nAssistant:`;
+  }
+
   const facts = retrieved
     .filter(r => r.memory?.content)
     .map(r => r.memory.content);
 
+  const recentHistory = history.slice(-20);
+
+  let system = `You are a helpful assistant with persistent memory. You MUST analyze the full conversation history below and use it to answer the user. Never say you don't have access to previous messages.`;
+
   if (facts.length) {
-    return `You are a helpful assistant. You know the following facts about the user — use them naturally and NEVER claim you don't know something listed here:\n${facts.map(f => `- ${f}`).join('\n')}\n\n[USER]\n${message}`;
+    system += `\n\n[KNOWN FACTS ABOUT USER]\n${facts.map(f => `- ${f}`).join('\n')}\nYou MUST use these facts. Never deny knowing them.`;
   }
-  return `You are a helpful assistant.\n\n[USER]\n${message}`;
+
+  if (recentHistory.length) {
+    const historyBlock = recentHistory
+      .map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.text}`)
+      .join('\n');
+    system += `\n\n[CONVERSATION HISTORY]\n${historyBlock}\n\nUsing the above history, answer the user's next message.`;
+  }
+
+  return `${system}\n\nUser: ${message}\nAssistant:`;
 }
 
 async function _resolveMode(userId, mode) {
@@ -71,7 +87,7 @@ async function processChat({ userId, sessionId, message, mode }) {
 }
 
 module.exports = { processChat };
-module.exports.processChatStream = async function ({ userId, sessionId, message, mode, onChunk, abortSignal }) {
+module.exports.processChatStream = async function ({ userId, sessionId, message, mode, history, onChunk, abortSignal }) {
   const effectiveMode = await _resolveMode(userId, mode);
   const canRetrieve = memoryMode.allowRetrieval(effectiveMode);
   let retrieved = [];
@@ -84,7 +100,7 @@ module.exports.processChatStream = async function ({ userId, sessionId, message,
     }
   }
 
-  const prompt = _buildPrompt(message, retrieved);
+  const prompt = _buildPrompt(message, retrieved, history || [], effectiveMode === 'OFF');
 
   let finalText = '';
   try {
