@@ -19,6 +19,8 @@ const janitor = require('./background/janitor');
 
 const app = express();
 
+app.set('trust proxy', 1);
+
 // Connect MongoDB (non-blocking start, routes will fail gracefully until connected)
 connectMongo().catch(e => console.error('MongoDB init error:', e.message));
 
