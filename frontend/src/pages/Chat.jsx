@@ -71,12 +71,15 @@ export default function Chat({ token, chatId, historyEnabled, onSaveSession, onN
   }
 
   function saveToHistory(updatedMessages, title) {
-    if (!historyEnabled || !chatId) return
+    if (!historyEnabled) return
+    const id = chatId || sessionIdRef.current
+    if (!id) return
+    const firstUserMsg = updatedMessages?.find(m => m?.role === 'user')?.text || 'New chat'
     onSaveSession({
-      id: chatId,
+      id,
       sessionId: sessionIdRef.current,
-      title: title || (updatedMessages[0]?.text?.slice(0, 40) + '…') || 'New chat',
-      messages: updatedMessages,
+      title: (title || firstUserMsg).slice(0, 40),
+      messages: updatedMessages.filter(Boolean),
       createdAt: new Date().toISOString()
     })
   }
@@ -96,9 +99,6 @@ export default function Chat({ token, chatId, historyEnabled, onSaveSession, onN
     if (!msg || streaming) return
     setInput('')
     setContext(null)
-
-    // Auto-create chatId on first message if not set
-    if (!chatId) onNewChat()
 
     const userMsg = { role: 'user', text: msg, id: crypto.randomUUID() }
     const assistantMsg = { role: 'assistant', text: '', streaming: true, id: crypto.randomUUID() }
@@ -177,7 +177,7 @@ export default function Chat({ token, chatId, historyEnabled, onSaveSession, onN
         const copy = [...prev]
         const last = copy[copy.length - 1]
         if (last?.streaming) copy[copy.length - 1] = { ...last, streaming: false }
-        const firstUserMsg = copy.find(m => m.role === 'user')?.text || 'New chat'
+        const firstUserMsg = copy.find(m => m?.role === 'user')?.text || 'New chat'
         saveToHistory(copy, firstUserMsg.slice(0, 40))
         return copy
       })
