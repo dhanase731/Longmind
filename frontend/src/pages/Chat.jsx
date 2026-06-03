@@ -38,7 +38,7 @@ export default function Chat({ token, chatId, historyEnabled, onSaveSession, onN
       const stored = JSON.parse(localStorage.getItem('lm_sessions') || '[]')
       const session = stored.find(s => s.id === chatId)
       if (session) {
-        setMessages(session.messages || [])
+        setMessages((session.messages || []).filter(m => m && m.role && typeof m.text === 'string'))
         sessionIdRef.current = session.sessionId
       } else {
         setMessages([])
@@ -148,11 +148,14 @@ export default function Chat({ token, chatId, historyEnabled, onSaveSession, onN
           if (ev === 'chunk') {
             try {
               const chunk = JSON.parse(data).text
+              if (!chunk) return
               finalText += chunk
               setMessages(prev => {
+                if (!prev.length) return prev
                 const copy = [...prev]
-                const last = { ...copy[copy.length - 1], text: copy[copy.length - 1].text + chunk }
-                copy[copy.length - 1] = last
+                const last = copy[copy.length - 1]
+                if (!last) return prev
+                copy[copy.length - 1] = { ...last, text: (last.text || '') + chunk }
                 return copy
               })
             } catch (e) {}
