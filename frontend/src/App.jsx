@@ -50,7 +50,7 @@ function AppShell({ token, onLogout }) {
   }, [historyEnabled])
 
   return (
-    <div className="flex h-screen bg-[#212121] text-gray-100 overflow-hidden">
+    <div className="flex h-screen text-gray-100 overflow-hidden" style={{background:'#080b11'}}>
       {/* Sidebar */}
       <Sidebar
         token={token}
@@ -95,12 +95,12 @@ function AppShell({ token, onLogout }) {
             }
           />
           <Route path="/memories" element={
-            <div className="flex-1 overflow-y-auto p-8 max-w-3xl mx-auto w-full">
+            <div className="flex-1 overflow-y-auto px-8 py-8 max-w-3xl mx-auto w-full">
               <Memories token={token} />
             </div>
           } />
           <Route path="/settings" element={
-            <div className="flex-1 overflow-y-auto p-8 max-w-2xl mx-auto w-full">
+            <div className="flex-1 overflow-y-auto px-8 py-8 max-w-2xl mx-auto w-full">
               <Settings
                 token={token}
                 historyEnabled={historyEnabled}

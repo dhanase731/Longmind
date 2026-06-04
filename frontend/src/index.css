@@ -2,18 +2,78 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body, #root {
-  height: 100%;
-  background-color: #212121;
-  color: #ececec;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --bg-base: #080b11;
+  --bg-surface: #0d1117;
+  --bg-elevated: #131920;
+  --bg-hover: #1a2230;
+  --border: rgba(99, 179, 237, 0.08);
+  --border-hover: rgba(99, 179, 237, 0.18);
+  --accent-blue: #3b82f6;
+  --accent-cyan: #06b6d4;
+  --accent-purple: #8b5cf6;
+  --accent-glow: rgba(59, 130, 246, 0.15);
 }
 
-/* Custom thin scrollbar across app */
+html, body, #root {
+  height: 100%;
+  background-color: var(--bg-base);
+  color: #e2e8f0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
 * {
   scrollbar-width: thin;
-  scrollbar-color: #3a3a3a transparent;
+  scrollbar-color: #1e2d40 transparent;
 }
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #555; }
+::-webkit-scrollbar-thumb { background: #1e2d40; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #2a3f58; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(59,130,246,0.3); }
+  50%       { box-shadow: 0 0 20px rgba(59,130,246,0.6); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-6px); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-in { animation: fadeIn 0.25s ease-out; }
+.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+.animate-float { animation: float 3s ease-in-out infinite; }
+
+.glass {
+  background: rgba(13, 17, 23, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+}
+
+.glow-blue { box-shadow: 0 0 20px rgba(59,130,246,0.2); }
+.glow-purple { box-shadow: 0 0 20px rgba(139,92,246,0.2); }
+
+.score-bar {
+  background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+}
+.score-bar-purple {
+  background: linear-gradient(90deg, var(--accent-purple), #a78bfa);
+}
+.score-bar-green {
+  background: linear-gradient(90deg, #10b981, #34d399);
+}
+.score-bar-orange {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
