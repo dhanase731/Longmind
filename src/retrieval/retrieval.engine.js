@@ -17,34 +17,47 @@ async function recall(userId, queryText, options = {}) {
       .limit(100)
       .lean();
 
-    const queryWords = queryText.toLowerCase().split(/\W+/).filter(w => w.length > 2);
+    const queryWords = new Set(queryText.toLowerCase().split(/\W+/).filter(w => w.length > 2));
 
-    const items = candidates.map(r => {
+    const scored = candidates.map(r => {
       const semantic = Math.max(0, r.embedding && r.embedding.length
         ? scoring.cosineSimilarity(queryEmbedding, r.embedding)
         : 0);
       const hours = (Date.now() - new Date(r.created_at)) / 3600000;
       const recency = scoring.recencyScore(hours);
       const importance = r.importance || 0.5;
-      const importanceBoost = importance >= 0.8 ? 0.3 : 0;
 
-      // Keyword overlap boost for deterministic embeddings
-      const contentWords = (r.content || '').toLowerCase().split(/\W+/).filter(w => w.length > 2);
-      const overlap = queryWords.filter(w => contentWords.includes(w)).length;
-      const keywordBoost = overlap > 0 ? Math.min(0.4, overlap * 0.15) : 0;
+      const contentWords = new Set((r.content || '').toLowerCase().split(/\W+/).filter(w => w.length > 2));
+      const overlap = [...queryWords].filter(w => contentWords.has(w)).length;
+      const keywordBoost = overlap > 0 ? Math.min(0.5, overlap * 0.2) : 0;
+      const importanceBoost = importance >= 0.7 ? 0.25 : 0;
 
       const final = scoring.finalScore(semantic, recency, importance) + importanceBoost + keywordBoost;
       return {
         memory: { id: r._id, content: r.content, memory_type: r.memory_type, created_at: r.created_at },
         scores: { semantic, recency, importance, final },
-        retrievalReason: `Semantic match on ${r.memory_type} memory (score: ${semantic.toFixed(2)})`
+        retrievalReason: `score:${final.toFixed(2)} keyword:${keywordBoost.toFixed(2)} importance:${importanceBoost.toFixed(2)}`
       };
     });
 
-    return items
-      .filter(i => i.scores.final > 0.05)
+    const results = scored
+      .filter(i => i.scores.final > 0.3)
       .sort((a, b) => b.scores.final - a.scores.final)
-      .slice(0, 8);
+      .slice(0, 5);
+
+    // Fallback: if nothing scored high enough, return top 3 by importance
+    if (results.length === 0) {
+      return candidates
+        .sort((a, b) => (b.importance || 0.5) - (a.importance || 0.5))
+        .slice(0, 3)
+        .map(r => ({
+          memory: { id: r._id, content: r.content, memory_type: r.memory_type, created_at: r.created_at },
+          scores: { semantic: 0, recency: 0, importance: r.importance || 0.5, final: r.importance || 0.5 },
+          retrievalReason: 'importance fallback'
+        }));
+    }
+
+    return results;
   } catch (e) {
     console.warn('retrieval error, fallback to recent', e.message);
     try {
