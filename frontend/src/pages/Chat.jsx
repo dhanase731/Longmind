@@ -220,8 +220,8 @@ export default function Chat({ token, chatId, historyEnabled, onSaveSession, onN
                     <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" stroke="#8b5cf6" strokeWidth="1.5"/>
                   </svg>
                 </div>
-                <h2 className="text-xl font-semibold text-white mb-1">LongMind</h2>
-                <p className="text-sm" style={{color:'#334155'}}>Persistent Memory · Governed Recall · Explainable Retrieval</p>
+                <h2 className="text-xl font-semibold mb-1" style={{color: theme.text}}>LongMind</h2>
+                <p className="text-sm" style={{color: theme.textDim}}>Persistent Memory · Governed Recall · Explainable Retrieval</p>
               </div>
               <div className="grid grid-cols-2 gap-2 w-full max-w-md">
                 {SUGGESTIONS.map((s, i) => (
@@ -249,7 +249,7 @@ export default function Chat({ token, chatId, historyEnabled, onSaveSession, onN
                   )}
                   <div className={`max-w-[78%] ${msg.role === 'user' ? 'rounded-2xl px-4 py-3' : 'py-1'}`}
                     style={msg.role === 'user' ? {background: theme.userBubble, border:`1px solid ${theme.userBubbleBorder}`} : {}}>
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{color:'#cbd5e1'}}>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{color: theme.text}}>
                       {msg.text}
                       {msg.streaming && !msg.text && (
                         <span className="flex gap-1 items-center h-5">
