@@ -115,7 +115,14 @@ export default function Chat({ token, chatId, historyEnabled, onSaveSession, onN
       const resp = await fetch(`${API}/chat/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
-        body: JSON.stringify({ message: msg, sessionId: getSessionId(), mode: effectiveMode }),
+        body: JSON.stringify({
+          message: msg,
+          sessionId: getSessionId(),
+          mode: effectiveMode,
+          history: historyEnabled
+            ? messages.filter(m => m?.role && m?.text && !m.streaming).map(m => ({ role: m.role, text: m.text }))
+            : []
+        }),
         signal: ac.signal
       })
 
@@ -287,7 +294,11 @@ export default function Chat({ token, chatId, historyEnabled, onSaveSession, onN
                     <p className="text-sm text-gray-100 whitespace-pre-wrap leading-relaxed">
                       {msg.text}
                       {msg.streaming && !msg.text && (
-                        <span className="inline-block w-2 h-4 bg-gray-400 animate-pulse ml-0.5 rounded-sm" />
+                        <span className="flex gap-1 items-center h-5">
+                          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay:'0ms'}} />
+                          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay:'150ms'}} />
+                          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay:'300ms'}} />
+                        </span>
                       )}
                     </p>
                   </div>

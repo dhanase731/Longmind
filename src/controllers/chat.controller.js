@@ -19,8 +19,8 @@ async function stream(req, res, next) {
   res.flushHeaders();
 
   const userId = req.user.userId;
-  const { sessionId, message, mode } = req.body;
-
+  const { sessionId, message, mode, history } = req.body;
+  // ...
   const ac = new AbortController();
   const genManager = require('../core/generation.manager');
   const crypto = require('crypto');
@@ -42,7 +42,7 @@ async function stream(req, res, next) {
   };
 
   try {
-    const result = await orchestrator.processChatStream({ userId, sessionId, message, mode, onChunk, abortSignal: ac.signal });
+    const result = await orchestrator.processChatStream({ userId, sessionId, message, mode, history: history || [], onChunk, abortSignal: ac.signal });
     if (!closed) {
       res.write(`event: context\ndata: ${JSON.stringify(result.context)}\n\n`);
     }

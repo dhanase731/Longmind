@@ -17,10 +17,6 @@ function AppShell({ token, onLogout }) {
   function toggleHistory(val) {
     setHistoryEnabled(val)
     localStorage.setItem('lm_history_enabled', String(val))
-    if (!val) {
-      // wipe stored sessions when user turns history off
-      localStorage.removeItem('lm_sessions')
-    }
   }
 
   function handleNewChat() {
