@@ -25,6 +25,15 @@ function AppShell({ token, onLogout }) {
     navigate('/chat')
   }
 
+  // Auto-init a chat ID if none exists
+  React.useEffect(() => {
+    if (!activeChatId) {
+      const stored = JSON.parse(localStorage.getItem('lm_sessions') || '[]')
+      if (stored.length > 0) setActiveChatId(stored[0].id)
+      else handleNewChat()
+    }
+  }, [])
+
   function handleSelectChat(id) {
     setActiveChatId(id)
     navigate('/chat')
