@@ -1,11 +1,11 @@
 const Groq = require('groq-sdk');
-const { GROQ_API_KEY } = require('../config/env');
 
 const GEN_MODEL = 'llama-3.1-8b-instant';
 
-let groq;
-if (GROQ_API_KEY) {
-  groq = new Groq({ apiKey: GROQ_API_KEY });
+let _groq;
+function getGroq() {
+  if (!_groq) _groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  return _groq;
 }
 
 function deterministicEmbedding(text, dim = 768) {
@@ -19,9 +19,9 @@ async function embed(text) {
 }
 
 async function generate(prompt) {
-  if (!groq) return { text: `[[stub: ${prompt.slice(0, 80)}]]` };
+  if (!process.env.GROQ_API_KEY) return { text: `[[stub: ${prompt.slice(0, 80)}]]` };
   try {
-    const res = await groq.chat.completions.create({
+    const res = await getGroq().chat.completions.create({
       model: GEN_MODEL,
       messages: [{ role: 'user', content: prompt }],
     });
@@ -33,13 +33,13 @@ async function generate(prompt) {
 }
 
 async function stream(prompt, onChunk, options = {}) {
-  if (!groq) {
+  if (!process.env.GROQ_API_KEY) {
     const r = await generate(prompt);
     await onChunk(r.text);
     return;
   }
   try {
-    const res = await groq.chat.completions.create({
+    const res = await getGroq().chat.completions.create({
       model: GEN_MODEL,
       messages: [{ role: 'user', content: prompt }],
       stream: true,
