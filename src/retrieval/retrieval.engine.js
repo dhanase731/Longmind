@@ -17,6 +17,8 @@ async function recall(userId, queryText, options = {}) {
       .limit(100)
       .lean();
 
+    const queryWords = queryText.toLowerCase().split(/\W+/).filter(w => w.length > 2);
+
     const items = candidates.map(r => {
       const semantic = Math.max(0, r.embedding && r.embedding.length
         ? scoring.cosineSimilarity(queryEmbedding, r.embedding)
@@ -24,9 +26,14 @@ async function recall(userId, queryText, options = {}) {
       const hours = (Date.now() - new Date(r.created_at)) / 3600000;
       const recency = scoring.recencyScore(hours);
       const importance = r.importance || 0.5;
-      // Boost identity/high-importance memories so they always surface
       const importanceBoost = importance >= 0.8 ? 0.3 : 0;
-      const final = scoring.finalScore(semantic, recency, importance) + importanceBoost;
+
+      // Keyword overlap boost for deterministic embeddings
+      const contentWords = (r.content || '').toLowerCase().split(/\W+/).filter(w => w.length > 2);
+      const overlap = queryWords.filter(w => contentWords.includes(w)).length;
+      const keywordBoost = overlap > 0 ? Math.min(0.4, overlap * 0.15) : 0;
+
+      const final = scoring.finalScore(semantic, recency, importance) + importanceBoost + keywordBoost;
       return {
         memory: { id: r._id, content: r.content, memory_type: r.memory_type, created_at: r.created_at },
         scores: { semantic, recency, importance, final },
@@ -35,9 +42,9 @@ async function recall(userId, queryText, options = {}) {
     });
 
     return items
-      .filter(i => i.scores.final > 0.1)
+      .filter(i => i.scores.final > 0.05)
       .sort((a, b) => b.scores.final - a.scores.final)
-      .slice(0, 5);
+      .slice(0, 8);
   } catch (e) {
     console.warn('retrieval error, fallback to recent', e.message);
     try {
