@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTheme } from '../ThemeContext'
 
 const TYPE_CONFIG = {
   stm:      { label: 'STM',      color: '#f59e0b', bg: 'rgba(245,158,11,0.08)' },
@@ -30,18 +31,19 @@ function ScoreBar({ label, value, barClass }) {
 }
 
 export default function MemoryInspector({ context }) {
+  const { theme } = useTheme()
   if (!context) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center px-4">
         <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
-          style={{background:'rgba(59,130,246,0.05)', border:'1px solid rgba(59,130,246,0.1)'}}>
+          style={{background:`${theme.accentBlue}0d`, border:`1px solid ${theme.border}`}}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <ellipse cx="12" cy="5" rx="9" ry="3" stroke="#1e3a5f" strokeWidth="1.5"/>
-            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" stroke="#1e3a5f" strokeWidth="1.5"/>
-            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" stroke="#1e3a5f" strokeWidth="1.5"/>
+            <ellipse cx="12" cy="5" rx="9" ry="3" stroke={theme.textGhost} strokeWidth="1.5"/>
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" stroke={theme.textGhost} strokeWidth="1.5"/>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" stroke={theme.textGhost} strokeWidth="1.5"/>
           </svg>
         </div>
-        <p className="text-xs leading-relaxed" style={{color:'#1e3a5f'}}>
+        <p className="text-xs leading-relaxed" style={{color: theme.textGhost}}>
           No retrieval data yet.<br/>Send a message to see<br/>memory scores here.
         </p>
       </div>
@@ -52,19 +54,19 @@ export default function MemoryInspector({ context }) {
     <div className="space-y-3 animate-fade-in">
       {/* Summary bar */}
       <div className="flex items-center justify-between px-3 py-2 rounded-xl"
-        style={{background:'rgba(59,130,246,0.05)', border:'1px solid rgba(59,130,246,0.1)'}}>
+        style={{background:`${theme.accentBlue}0d`, border:`1px solid ${theme.border}`}}>
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full" style={{background:'#3b82f6'}}/>
-          <span className="text-xs" style={{color:'#64748b'}}>{context.memoriesUsed} retrieved</span>
+          <span className="text-xs" style={{color: theme.textFaint}}>{context.memoriesUsed} retrieved</span>
         </div>
         <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-          style={{background:'rgba(59,130,246,0.12)', color:'#93c5fd'}}>
+          style={{background:`${theme.accentBlue}18`, color: theme.accentBlue}}>
           {context.mode}
         </span>
       </div>
 
       {context.memoriesUsed === 0 && (
-        <p className="text-xs text-center py-4" style={{color:'#1e3a5f'}}>
+        <p className="text-xs text-center py-4" style={{color: theme.textGhost}}>
           No relevant memories found for this query.
         </p>
       )}
@@ -73,10 +75,10 @@ export default function MemoryInspector({ context }) {
         const typeConf = TYPE_CONFIG[s.memory?.memory_type] || { label: s.memory?.memory_type, color: '#475569', bg: 'rgba(255,255,255,0.03)' }
         return (
           <div key={i} className="rounded-xl p-3 space-y-3"
-            style={{background:'rgba(13,17,23,0.8)', border:'1px solid rgba(59,130,246,0.08)'}}>
+            style={{background: theme.bgCard, border:`1px solid ${theme.border}`}}>
 
             {/* Memory content */}
-            <p className="text-xs leading-relaxed" style={{color:'#cbd5e1'}}>
+            <p className="text-xs leading-relaxed" style={{color: theme.textMuted}}>
               {s.memory?.content}
             </p>
 
@@ -88,20 +90,20 @@ export default function MemoryInspector({ context }) {
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between pt-1" style={{borderTop:'1px solid rgba(59,130,246,0.06)'}}>
+            <div className="flex items-center justify-between pt-1" style={{borderTop:`1px solid ${theme.border}`}}>
               <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md"
                 style={{color: typeConf.color, background: typeConf.bg}}>
                 {typeConf.label}
               </span>
               {s.memory?.created_at && (
-                <span className="text-[10px]" style={{color:'#1e3a5f'}}>
+                <span className="text-[10px]" style={{color: theme.textGhost}}>
                   {new Date(s.memory.created_at).toLocaleDateString()}
                 </span>
               )}
             </div>
 
             {s.retrievalReason && (
-              <p className="text-[10px] italic truncate" style={{color:'#334155'}}>{s.retrievalReason}</p>
+              <p className="text-[10px] italic truncate" style={{color: theme.textDim}}>{s.retrievalReason}</p>
             )}
           </div>
         )

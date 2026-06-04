@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import MemoryInspector from '../components/MemoryInspector'
+import { useTheme } from '../ThemeContext'
 
 const API = import.meta.env.VITE_API_URL || ''
 
@@ -14,6 +15,7 @@ const MODE_DESC = {
 }
 
 export default function Chat({ token, chatId, historyEnabled, onSaveSession, onNewChat, sidebarCollapsed }) {
+  const { theme } = useTheme()
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
@@ -170,18 +172,18 @@ export default function Chat({ token, chatId, historyEnabled, onSaveSession, onN
 
         {/* Top bar */}
         <div className="flex items-center justify-between px-4 py-2.5 shrink-0"
-          style={{borderBottom:'1px solid rgba(59,130,246,0.06)', background:'rgba(8,11,17,0.8)', backdropFilter:'blur(8px)'}}>
+          style={{borderBottom:`1px solid ${theme.border}`, background: theme.bgCard, backdropFilter:'blur(8px)'}}>
           <div className="flex items-center gap-2">
             {historyEnabled ? (
               <div className="flex items-center gap-0.5 p-0.5 rounded-xl"
-                style={{background:'rgba(59,130,246,0.05)', border:'1px solid rgba(59,130,246,0.08)'}}>
+                style={{background:`${theme.accentBlue}0d`, border:`1px solid ${theme.border}`}}>
                 {MODES.map(m => (
                   <button key={m} onClick={() => { setMode(m); localStorage.setItem('lm_mode', m) }}
                     title={MODE_DESC[m]}
                     className="text-[10px] px-2.5 py-1 rounded-lg font-medium transition"
                     style={mode === m
-                      ? {background:'linear-gradient(135deg,#1d4ed8,#7c3aed)', color:'white'}
-                      : {color:'#334155'}}
+                      ? {background: theme.gradient, color:'white'}
+                      : {color: theme.textDim}}
                   >{m}</button>
                 ))}
               </div>
@@ -196,8 +198,8 @@ export default function Chat({ token, chatId, historyEnabled, onSaveSession, onN
           <button onClick={() => setInspectorOpen(v => !v)}
             className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl transition font-medium"
             style={inspectorOpen
-              ? {background:'rgba(59,130,246,0.1)', color:'#93c5fd', border:'1px solid rgba(59,130,246,0.2)'}
-              : {color:'#334155', border:'1px solid rgba(59,130,246,0.08)'}}>
+              ? {background:`${theme.accentBlue}18`, color: theme.accentBlue, border:`1px solid ${theme.accentBlue}35`}
+              : {color: theme.textDim, border:`1px solid ${theme.border}`}}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
             </svg>
@@ -225,7 +227,7 @@ export default function Chat({ token, chatId, historyEnabled, onSaveSession, onN
                 {SUGGESTIONS.map((s, i) => (
                   <button key={i} onClick={() => { setInput(s); textareaRef.current?.focus() }}
                     className="text-left text-xs rounded-xl px-4 py-3 transition leading-relaxed"
-                    style={{color:'#475569', background:'rgba(59,130,246,0.03)', border:'1px solid rgba(59,130,246,0.08)'}}>
+                    style={{color: theme.textFaint, background: theme.suggestionBg, border:`1px solid ${theme.border}`}}>
                     {s}
                   </button>
                 ))}
@@ -246,14 +248,14 @@ export default function Chat({ token, chatId, historyEnabled, onSaveSession, onN
                     </div>
                   )}
                   <div className={`max-w-[78%] ${msg.role === 'user' ? 'rounded-2xl px-4 py-3' : 'py-1'}`}
-                    style={msg.role === 'user' ? {background:'rgba(59,130,246,0.08)', border:'1px solid rgba(59,130,246,0.12)'} : {}}>
+                    style={msg.role === 'user' ? {background: theme.userBubble, border:`1px solid ${theme.userBubbleBorder}`} : {}}>
                     <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{color:'#cbd5e1'}}>
                       {msg.text}
                       {msg.streaming && !msg.text && (
                         <span className="flex gap-1 items-center h-5">
                           {[0,150,300].map(d => (
                             <span key={d} className="w-1.5 h-1.5 rounded-full animate-bounce"
-                              style={{background:'#1e3a5f', animationDelay:`${d}ms`}}/>
+                              style={{background: theme.textGhost, animationDelay:`${d}ms`}}/>
                           ))}
                         </span>
                       )}
@@ -276,11 +278,11 @@ export default function Chat({ token, chatId, historyEnabled, onSaveSession, onN
         <div className="px-4 py-4 shrink-0">
           <div className="max-w-3xl mx-auto">
             <div className="relative flex items-end gap-2 rounded-2xl px-4 py-3 transition"
-              style={{background:'rgba(13,17,23,0.9)', border:'1px solid rgba(59,130,246,0.12)'}}>
+              style={{background: theme.bgInput, border:`1px solid ${theme.border}`}}>
               <textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)}
                 onKeyDown={handleKeyDown} placeholder="Message LongMind…" rows={1}
                 className="flex-1 bg-transparent text-sm resize-none focus:outline-none leading-relaxed"
-                style={{color:'#cbd5e1', maxHeight:'200px'}}
+                style={{color: theme.text, maxHeight:'200px'}}
                 onFocus={e => e.target.closest('div').style.borderColor='rgba(59,130,246,0.3)'}
                 onBlur={e => e.target.closest('div').style.borderColor='rgba(59,130,246,0.12)'}
               />
@@ -289,8 +291,8 @@ export default function Chat({ token, chatId, historyEnabled, onSaveSession, onN
                 disabled={!streaming && !input.trim()}
                 className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg transition disabled:opacity-30"
                 style={streaming || input.trim()
-                  ? {background:'linear-gradient(135deg,#1d4ed8,#7c3aed)', color:'white'}
-                  : {background:'rgba(59,130,246,0.05)', color:'#1e3a5f'}}>
+                  ? {background: theme.gradient, color:'white'}
+                  : {background:`${theme.accentBlue}0d`, color: theme.textGhost}}>
                 {streaming ? (
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
                 ) : (
@@ -298,8 +300,8 @@ export default function Chat({ token, chatId, historyEnabled, onSaveSession, onN
                 )}
               </button>
             </div>
-            <p className="text-center text-[10px] mt-2" style={{color:'#1e2d40'}}>
-              LongMind remembers across sessions · Mode: <span style={{color:'#3b82f6'}}>{effectiveMode}</span>
+            <p className="text-center text-[10px] mt-2" style={{color: theme.textGhost2}}>
+              LongMind remembers across sessions · Mode: <span style={{color: theme.accentBlue}}>{effectiveMode}</span>
             </p>
           </div>
         </div>
@@ -308,21 +310,21 @@ export default function Chat({ token, chatId, historyEnabled, onSaveSession, onN
       {/* Memory Inspector */}
       {inspectorOpen && (
         <div className="w-72 shrink-0 overflow-y-auto"
-          style={{borderLeft:'1px solid rgba(59,130,246,0.08)', background:'#090c14'}}>
+          style={{borderLeft:`1px solid ${theme.border}`, background: theme.bgInspector}}>
           <div className="p-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 rounded flex items-center justify-center"
-                  style={{background:'rgba(59,130,246,0.1)'}}>
+                  style={{background:`${theme.accentBlue}18`}}>
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2">
                     <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
                   </svg>
                 </div>
-                <h3 className="text-xs font-semibold" style={{color:'#94a3b8'}}>Memory Inspector</h3>
+                <h3 className="text-xs font-semibold" style={{color: theme.textMuted}}>Memory Inspector</h3>
               </div>
               <button onClick={() => setInspectorOpen(false)}
-                className="text-lg leading-none transition hover:text-white"
-                style={{color:'#1e3a5f'}}>×</button>
+                className="text-lg leading-none transition"
+                style={{color: theme.textGhost}}>×</button>
             </div>
             <MemoryInspector context={context}/>
           </div>
